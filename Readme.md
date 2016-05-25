@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url] [![Dependency status][dependency-image]][dependency-url]
 
 * Студент: [Василий Толкачёв](https://up.htmlacademy.ru/javascript/5/user/121852).
-* Наставник: `Неизвестно`.
+* Наставник: [Антон Лунёв](https://htmlacademy.ru/profile/id118520).
 
 ---
 
