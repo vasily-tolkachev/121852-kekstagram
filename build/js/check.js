@@ -1,12 +1,3 @@
-function getMsgForBoolean(a,b) {
-	if (a === true) {
-		return "Переданное GIF-изображение анимировано и содержит " + b + " кадров";
-	}
-	else {
-		return "Переданное GIF-изображение не анимировано";
-	}
-}
-
 function findSquare (firstArray, secondArray) {
 	if (firstArray.lenght === secondArray.lenght) {
 		var square = 0;
