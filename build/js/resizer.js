@@ -51,6 +51,50 @@
     this._onDrag = this._onDrag.bind(this);
   };
 
+  var drawDot = function(coordinate, dotRadius, color, context) {
+    context.beginPath();
+    context.arc(coordinate.x, coordinate.y, dotRadius, 0, 2 * Math.PI);
+    context.fillStyle = color;
+    context.fill();
+  };
+
+  var drawDottedLine = function(firstPoint, secondPoint, lineWidth, color, context) {
+    var dotRadius = lineWidth / 2;
+    var indent = 2 * dotRadius;
+    var currentDotCoord = new Coordinate(firstPoint.x, firstPoint.y);
+
+    var dx = secondPoint.x - firstPoint.x;
+    var dy = secondPoint.y - firstPoint.y;
+
+    var steps = 0;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      steps = parseInt(Math.abs(dx) / (2 * dotRadius + indent), 10);
+    } else {
+      steps = parseInt(Math.abs(dy) / (2 * dotRadius + indent), 10);
+    }
+
+    var xIncrement = dx / steps;
+    var yIncrement = dy / steps;
+
+    for(var i = 0; i < steps; i++) {
+      drawDot(currentDotCoord, dotRadius, color, context);
+      currentDotCoord.x += xIncrement;
+      currentDotCoord.y += yIncrement;
+    }
+  };
+
+  var drawDottedSquare = function(strokeWidth, color, context, square) {
+    var array = [new Coordinate(square.x, square.y),
+                 new Coordinate(square.x + square.side, square.y),
+                 new Coordinate(square.x + square.side, square.y + square.side),
+                 new Coordinate(square.x, square.y + square.side),
+                 new Coordinate(square.x, square.y)];
+
+    for (var i = 0; i < array.length - 1; i++) {
+      drawDottedLine(array[i], array[i + 1], strokeWidth, color, context);
+    }
+  };
+
   Resizer.prototype = {
     /**
      * Родительский элемент канваса.
@@ -83,21 +127,6 @@
       // Очистка изображения.
       this._ctx.clearRect(0, 0, this._container.width, this._container.height);
 
-      // Параметры линии.
-      // NB! Такие параметры сохраняются на время всего процесса отрисовки
-      // canvas'a поэтому важно вовремя поменять их, если нужно начать отрисовку
-      // чего-либо с другой обводкой.
-
-      // Толщина линии.
-      this._ctx.lineWidth = 6;
-      // Цвет обводки.
-      this._ctx.strokeStyle = '#ffe753';
-      // Размер штрихов. Первый элемент массива задает длину штриха, второй
-      // расстояние между соседними штрихами.
-      this._ctx.setLineDash([15, 10]);
-      // Смещение первого штриха от начала линии.
-      this._ctx.lineDashOffset = 7;
-
       // Сохранение состояния канваса.
       // Подробней см. строку 132.
       this._ctx.save();
@@ -107,18 +136,47 @@
 
       var displX = -(this._resizeConstraint.x + this._resizeConstraint.side / 2);
       var displY = -(this._resizeConstraint.y + this._resizeConstraint.side / 2);
+
       // Отрисовка изображения на холсте. Параметры задают изображение, которое
       // нужно отрисовать и координаты его верхнего левого угла.
       // Координаты задаются от центра холста.
       this._ctx.drawImage(this._image, displX, displY);
 
-      // Отрисовка прямоугольника, обозначающего область изображения после
-      // кадрирования. Координаты задаются от центра.
-      this._ctx.strokeRect(
-          (-this._resizeConstraint.side / 2) - this._ctx.lineWidth / 2,
-          (-this._resizeConstraint.side / 2) - this._ctx.lineWidth / 2,
-          this._resizeConstraint.side - this._ctx.lineWidth / 2,
-          this._resizeConstraint.side - this._ctx.lineWidth / 2);
+      var strokeWidth = 4;
+
+      var square = new Square(
+          -this._resizeConstraint.side / 2,
+          -this._resizeConstraint.side / 2,
+          this._resizeConstraint.side);
+
+      // Отрисовка пунктирной рамки
+      drawDottedSquare(strokeWidth, '#ffe753', this._ctx, square);
+
+      var clippingRegion = new Square(
+          (-this._resizeConstraint.side / 2) - strokeWidth / 2,
+          (-this._resizeConstraint.side / 2) - strokeWidth / 2,
+          this._resizeConstraint.side + strokeWidth);
+
+      this._ctx.beginPath();
+      this._ctx.moveTo(-this._container.width / 2, -this._container.height / 2);
+      this._ctx.lineTo(-this._container.width / 2, this._container.height / 2);
+      this._ctx.lineTo(this._container.width / 2, this._container.height / 2);
+      this._ctx.lineTo(this._container.width / 2, -this._container.height / 2);
+      this._ctx.lineTo(-this._container.width / 2, -this._container.height / 2);
+
+      this._ctx.moveTo(clippingRegion.x, clippingRegion.y);
+      this._ctx.lineTo(clippingRegion.x + clippingRegion.side, clippingRegion.y);
+      this._ctx.lineTo(clippingRegion.x + clippingRegion.side, clippingRegion.y + clippingRegion.side);
+      this._ctx.lineTo(clippingRegion.x, clippingRegion.y + clippingRegion.side);
+      this._ctx.lineTo(clippingRegion.x, clippingRegion.y);
+      this._ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      this._ctx.fill('evenodd');
+
+      this._ctx.fillStyle = 'white';
+      this._ctx.font = '16px Tahoma';
+      this._ctx.textAlign = 'center';
+      this._ctx.textBaseline = 'bottom';
+      this._ctx.fillText(this._image.naturalWidth + ' x ' + this._image.naturalHeight, 0, clippingRegion.y - 5);
 
       // Восстановление состояния канваса, которое было до вызова ctx.save
       // и последующего изменения системы координат. Нужно для того, чтобы
