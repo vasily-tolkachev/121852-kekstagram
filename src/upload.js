@@ -119,7 +119,7 @@
 
     return (leftValue + sideValue <= imageWidth)
      && (topValue + sideValue <= imageHeight)
-     && (leftValue > 0 && topValue > 0 && sideValue > 0);
+     && (leftValue >= 0 && topValue >= 0 && sideValue >= 0);
   }
 
   /**
@@ -149,15 +149,6 @@
    * @type {HTMLElement}
    */
   var uploadMessage = document.querySelector('.upload-message');
-
-  resizeForm.oninput = function() {
-    if (!resizeFormIsValid()) {
-      submitBtn.setAttribute('disabled', 'disabled');
-    } else {
-      submitBtn.removeAttribute('disabled', 'disabled');
-    }
-  };
-
 
   /**
    * @param {Action} action
@@ -258,6 +249,19 @@
 
       resizeForm.classList.add('invisible');
       filterForm.classList.remove('invisible');
+    }
+  };
+
+  resizeForm.oninput = function() {
+    if (!resizeFormIsValid()) {
+      submitBtn.setAttribute('disabled', 'disabled');
+    } else {
+      var leftValue = parseInt(leftInput.value, 10) || 0;
+      var topValue = parseInt(topInput.value, 10) || 0;
+      var sideValue = parseInt(sideInput.value, 10) || 0;
+      currentResizer.setConstraint(leftValue, topValue, sideValue);
+
+      submitBtn.removeAttribute('disabled', 'disabled');
     }
   };
 
