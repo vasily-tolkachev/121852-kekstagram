@@ -315,8 +315,6 @@
     evt.preventDefault();
 
     var date = new Date(Date.now() + getNumDaysAfterBirthday());
-    var d = new Date(date).toUTCString();
-    console.log(d);
     if (filterNone.checked) {
       browserCookies.set('filter', filterNone.value, {expires: date});
     } else if (filterChrome.checked) {
