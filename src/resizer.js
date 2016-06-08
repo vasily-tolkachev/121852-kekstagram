@@ -2,13 +2,8 @@
 
 (function() {
   var leftInput = document.querySelector('#resize-x');
-  leftInput.min = 0;
-
   var topInput = document.querySelector('#resize-y');
-  topInput.min = 0;
-
   var sideInput = document.querySelector('#resize-size');
-  sideInput.min = 0;
 
   function setFieldConstraint(imageWidth, imageHeight) {
     var sideMax = Math.min(imageWidth - leftInput.value, imageHeight - topInput.value);
