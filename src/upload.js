@@ -8,6 +8,9 @@
 'use strict';
 
 (function() {
+
+  var browserCookies = require('browser-cookies');
+
   /** @enum {string} */
   var FileType = {
     'GIF': '',
@@ -51,6 +54,10 @@
   sideInput.min = 0;
 
   var submitBtn = document.querySelector('#resize-fwd');
+
+  var filterNone = document.querySelector('#upload-filter-none');
+  var filterChrome = document.querySelector('#upload-filter-chrome');
+  var filterSepia = document.querySelector('#upload-filter-sepia');
 
   /**
    * Удаляет текущий объект {@link Resizer}, чтобы создать новый с другим
@@ -179,6 +186,17 @@
     uploadMessage.classList.add('invisible');
   }
 
+  function getNumDaysAfterBirthday() {
+    var birthday = new Date('2015-12-30');
+    var currentDate = new Date(Date.now());
+    var year = currentDate.getFullYear();
+    birthday.setFullYear(year);
+    if (currentDate - birthday < 0) {
+      birthday.setFullYear(year - 1);
+    }
+    return currentDate - birthday;
+  }
+
   /**
    * Обработчик изменения изображения в форме загрузки. Если загруженный
    * файл является изображением, считывается исходник картинки, создается
@@ -247,6 +265,18 @@
     if (resizeFormIsValid()) {
       filterImage.src = currentResizer.exportImage().src;
 
+      var lastFilter = browserCookies.get('filter');
+      if (lastFilter === filterSepia.value) {
+        filterSepia.setAttribute('checked', 'checked');
+        filterImage.classList.add('filter-sepia');
+      } else if (lastFilter === filterChrome.value) {
+        filterChrome.setAttribute('checked', 'checked');
+        filterImage.classList.add('filter-chrome');
+      } else {
+        filterNone.setAttribute('checked', 'checked');
+        filterImage.classList.add('filter-none');
+      }
+
       resizeForm.classList.add('invisible');
       filterForm.classList.remove('invisible');
     }
@@ -283,6 +313,15 @@
    */
   filterForm.onsubmit = function(evt) {
     evt.preventDefault();
+
+    var date = new Date(Date.now() + getNumDaysAfterBirthday());
+    if (filterNone.checked) {
+      browserCookies.set('filter', filterNone.value, {expires: date});
+    } else if (filterChrome.checked) {
+      browserCookies.set('filter', filterChrome.value, {expires: date});
+    } else if (filterSepia.checked) {
+      browserCookies.set('filter', filterSepia.value, {expires: date});
+    }
 
     cleanupResizer();
     updateBackground();
