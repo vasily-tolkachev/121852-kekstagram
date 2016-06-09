@@ -41,6 +41,17 @@
    */
   var currentResizer;
 
+  var leftInput = document.querySelector('#resize-x');
+  leftInput.min = 0;
+
+  var topInput = document.querySelector('#resize-y');
+  topInput.min = 0;
+
+  var sideInput = document.querySelector('#resize-size');
+  sideInput.min = 0;
+
+  var submitBtn = document.querySelector('#resize-fwd');
+
   /**
    * Удаляет текущий объект {@link Resizer}, чтобы создать новый с другим
    * изображением.
@@ -67,12 +78,48 @@
     backgroundElement.style.backgroundImage = 'url(' + images[randomImageNumber] + ')';
   }
 
+  function setSideConstraint() {
+    var leftValue = parseInt(leftInput.value, 10) || 0;
+    var topValue = parseInt(topInput.value, 10) || 0;
+    var sideMax = Math.min(currentResizer._image.naturalWidth - leftValue, currentResizer._image.naturalHeight - topValue);
+    sideInput.max = sideMax >= 0 ? sideMax : 0;
+  }
+
+  function setIndentsConstraint() {
+    var sideValue = parseInt(sideInput.value, 10) || 0;
+    var leftMax = currentResizer._image.naturalWidth - sideValue;
+    leftInput.max = leftMax >= 0 ? leftMax : 0;
+    var topMax = currentResizer._image.naturalHeight - sideValue;
+    topInput.max = topMax >= 0 ? topMax : 0;
+  }
+
+  leftInput.oninput = function() {
+    setSideConstraint();
+  };
+
+  topInput.oninput = function() {
+    setSideConstraint();
+  };
+
+  sideInput.oninput = function() {
+    setIndentsConstraint();
+  };
+
   /**
    * Проверяет, валидны ли данные, в форме кадрирования.
    * @return {boolean}
    */
   function resizeFormIsValid() {
-    return true;
+    var imageWidth = currentResizer._image.naturalWidth;
+    var imageHeight = currentResizer._image.naturalHeight;
+
+    var leftValue = parseInt(leftInput.value, 10) || 0;
+    var topValue = parseInt(topInput.value, 10) || 0;
+    var sideValue = parseInt(sideInput.value, 10) || 0;
+
+    return (leftValue + sideValue <= imageWidth)
+     && (topValue + sideValue <= imageHeight)
+     && (leftValue >= 0 && topValue >= 0 && sideValue >= 0);
   }
 
   /**
@@ -156,6 +203,9 @@
           currentResizer.setElement(resizeForm);
           uploadMessage.classList.add('invisible');
 
+          setSideConstraint();
+          setIndentsConstraint();
+
           uploadForm.classList.add('invisible');
           resizeForm.classList.remove('invisible');
 
@@ -199,6 +249,19 @@
 
       resizeForm.classList.add('invisible');
       filterForm.classList.remove('invisible');
+    }
+  };
+
+  resizeForm.oninput = function() {
+    if (!resizeFormIsValid()) {
+      submitBtn.setAttribute('disabled', 'disabled');
+    } else {
+      var leftValue = parseInt(leftInput.value, 10) || 0;
+      var topValue = parseInt(topInput.value, 10) || 0;
+      var sideValue = parseInt(sideInput.value, 10) || 0;
+      currentResizer.setConstraint(leftValue, topValue, sideValue);
+
+      submitBtn.removeAttribute('disabled', 'disabled');
     }
   };
 

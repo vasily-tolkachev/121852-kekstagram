@@ -1,6 +1,24 @@
 'use strict';
 
 (function() {
+  var leftInput = document.querySelector('#resize-x');
+  leftInput.min = 0;
+
+  var topInput = document.querySelector('#resize-y');
+  topInput.min = 0;
+
+  var sideInput = document.querySelector('#resize-size');
+  sideInput.min = 0;
+
+  function setFieldConstraint(imageWidth, imageHeight) {
+    var sideMax = Math.min(imageWidth - leftInput.value, imageHeight - topInput.value);
+    sideInput.max = sideMax >= 0 ? sideMax : 0;
+    var leftMax = imageWidth - sideInput.value;
+    leftInput.max = leftMax >= 0 ? leftMax : 0;
+    var topMax = imageHeight - sideInput.value;
+    topInput.max = topMax >= 0 ? topMax : 0;
+  }
+
   /**
    * @constructor
    * @param {string} image
@@ -34,12 +52,14 @@
           this._container.width * INITIAL_SIDE_RATIO,
           this._container.height * INITIAL_SIDE_RATIO);
 
+      leftInput.value = parseInt(this._container.width / 2 - side / 2, 10);
+      topInput.value = parseInt(this._container.height / 2 - side / 2, 10);
+      sideInput.value = parseInt(side, 10);
+      setFieldConstraint(this._image.naturalWidth, this._image.naturalHeight);
+
       // Изначально предлагаемое кадрирование — часть по центру с размером в 3/4
       // от размера меньшей стороны.
-      this._resizeConstraint = new Square(
-          this._container.width / 2 - side / 2,
-          this._container.height / 2 - side / 2,
-          side);
+      this._resizeConstraint = new Square(this._container.width / 2 - side / 2, this._container.height / 2 - side / 2, side);
 
       // Отрисовка изначального состояния канваса.
       this.setConstraint();
@@ -285,22 +305,29 @@
           this._resizeConstraint.side + (deltaSide || 0));
     },
 
+    constraintIsValid: function(x, y, side) {
+      return x + side <= this._image.naturalWidth
+       && y + side <= this._image.naturalHeight
+       && x >= 0 && y >= 0 && side >= 0
+       && x !== 'undefined'
+       && y !== 'undefined'
+       && side !== 'undefined';
+    },
+
     /**
      * @param {number} x
      * @param {number} y
      * @param {number} side
      */
     setConstraint: function(x, y, side) {
-      if (typeof x !== 'undefined') {
+      if (this.constraintIsValid(x, y, side)) {
         this._resizeConstraint.x = x;
-      }
-
-      if (typeof y !== 'undefined') {
         this._resizeConstraint.y = y;
-      }
-
-      if (typeof side !== 'undefined') {
         this._resizeConstraint.side = side;
+        leftInput.value = parseInt(x, 10);
+        topInput.value = parseInt(y, 10);
+        sideInput.value = parseInt(side, 10);
+        setFieldConstraint(this._image.naturalWidth, this._image.naturalHeight);
       }
 
       requestAnimationFrame(function() {
