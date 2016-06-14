@@ -1,28 +1,10 @@
 'use strict';
 
-var dataLength = 0;
 var picturesContainer = document.querySelector('.pictures');
 var templateElement = document.querySelector('template');
 var elementToClone;
-var filterContainer = document.querySelector('.filters');
-
-function scriptRequest(source, callback) {
-  window.__picturesLoadCallback = function(data) {
-    filterContainer.classList.add('hidden');
-    delete window.__picturesLoadCallback;
-    var script = document.getElementById('pictures-load-script');
-    script.parentNode.removeChild(script);
-    dataLength = data.length;
-    callback(data);
-  };
-
-  var newScript = document.createElement('script');
-  var currentScript = document.currentScript;
-  var parent = currentScript.parentNode;
-  newScript.src = source;
-  newScript.id = 'pictures-load-script';
-  parent.insertBefore(newScript, currentScript.nextSibling);
-}
+var filtersContainer = document.querySelector('.filters');
+var pictures = [];
 
 if ('content' in templateElement) {
   elementToClone = templateElement.content.querySelector('.picture');
@@ -33,13 +15,7 @@ if ('content' in templateElement) {
 var IMAGE_LOAD_TIMEOUT = 10000;
 var IMAGE_WIDTH = 182;
 var IMAGE_HEIGTH = 182;
-
-var checkLoadingEnd = function() {
-  dataLength--;
-  if(dataLength === 0) {
-    filterContainer.classList.remove('hidden');
-  }
-};
+var PICTURES_LOAD_URL = '//o0.github.io/assets/json/pictures.json';
 
 var getPictureElement = function(data, container) {
   var element = elementToClone.cloneNode(true);
@@ -57,13 +33,11 @@ var getPictureElement = function(data, container) {
     imageTag.src = evt.target.src;
     imageTag.width = IMAGE_WIDTH;
     imageTag.height = IMAGE_HEIGTH;
-    checkLoadingEnd();
   };
 
   image.onerror = function() {
     clearTimeout(pictureLoadTimeout);
     element.classList.add('picture-load-failure');
-    checkLoadingEnd();
   };
 
   image.src = data.url;
@@ -71,14 +45,88 @@ var getPictureElement = function(data, container) {
   pictureLoadTimeout = setTimeout(function() {
     image.src = '';
     element.classList.add('picture-load-failure');
-    checkLoadingEnd();
   }, IMAGE_LOAD_TIMEOUT);
 
   return element;
 };
 
-scriptRequest('https://up.htmlacademy.ru/assets/js_intensive/jsonp/pictures.js', function(pictures) {
-  pictures.forEach(function(picture) {
+var getPictures = function(callback) {
+  filtersContainer.classList.add('hidden');
+  var xhr = new XMLHttpRequest();
+
+  xhr.onload = function(evt) {
+    picturesContainer.classList.remove('pictures-loading');
+    var loadedData = JSON.parse(evt.target.response);
+    callback(loadedData);
+    filtersContainer.classList.remove('hidden');
+  };
+
+  xhr.onerror = function() {
+    picturesContainer.classList.remove('pictures-loading');
+    picturesContainer.classList.add('pictures-failure');
+    filtersContainer.classList.remove('hidden');
+  };
+
+  xhr.timeout = 10000;
+  xhr.ontimeout = function() {
+    picturesContainer.classList.remove('pictures-loading');
+    picturesContainer.classList.add('pictures-failure');
+    filtersContainer.classList.remove('hidden');
+  };
+
+  picturesContainer.classList.add('pictures-loading');
+
+  xhr.open('GET', PICTURES_LOAD_URL);
+  xhr.send();
+};
+
+var renderPictures = function(loadedPictures) {
+  picturesContainer.innerHTML = '';
+  loadedPictures.forEach(function(picture) {
     getPictureElement(picture, picturesContainer);
   });
+};
+
+var getFilteredPictures = function(loadedPictures, filter) {
+  var picturesToFilter = loadedPictures.slice(0);
+
+  switch (filter) {
+    case 'discussed':
+      picturesToFilter.sort(function(a, b) {
+        return b.comments - a.comments;
+      });
+      break;
+    case 'new':
+      picturesToFilter.sort(function(a, b) {
+        return Date.parse(b.date) - Date.parse(a.date);
+      });
+      picturesToFilter = picturesToFilter.filter(function(picture) {
+        return ((Date.now() - Date.parse(picture.date)) / 24 / 60 / 60 / 1000) <= 4 &&
+          ((Date.now() - Date.parse(picture.date)) / 24 / 60 / 60 / 1000) > 0;
+      });
+      break;
+  }
+
+  return picturesToFilter;
+};
+
+var setFilterEnabled = function(filter) {
+  var filteredHotels = getFilteredPictures(pictures, filter);
+  renderPictures(filteredHotels);
+};
+
+
+var setFiltrationEnabled = function() {
+  var filters = filtersContainer.querySelectorAll('.filters-radio');
+  for (var i = 0; i < filters.length; i++) {
+    filters[i].onclick = function() {
+      setFilterEnabled(this.value);
+    };
+  }
+};
+
+getPictures(function(loadedPictures) {
+  pictures = loadedPictures;
+  setFiltrationEnabled();
+  setFilterEnabled('popular');
 });
