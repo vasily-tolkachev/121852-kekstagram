@@ -6,16 +6,22 @@ var elementToClone;
 var filtersContainer = document.querySelector('.filters');
 var pictures = [];
 
+var IMAGE_LOAD_TIMEOUT = 10000;
+var IMAGE_WIDTH = 182;
+var IMAGE_HEIGTH = 182;
+var PICTURES_LOAD_URL = '//o0.github.io/assets/json/pictures.json';
+var DAYS_LIMIT = 4;
+
+var Filter = {
+  'NEW': 'new',
+  'DISCUSSED': 'discussed'
+};
+
 if ('content' in templateElement) {
   elementToClone = templateElement.content.querySelector('.picture');
 } else {
   elementToClone = templateElement.querySelector('.picture');
 }
-
-var IMAGE_LOAD_TIMEOUT = 10000;
-var IMAGE_WIDTH = 182;
-var IMAGE_HEIGTH = 182;
-var PICTURES_LOAD_URL = '//o0.github.io/assets/json/pictures.json';
 
 var getPictureElement = function(data, container) {
   var element = elementToClone.cloneNode(true);
@@ -50,6 +56,12 @@ var getPictureElement = function(data, container) {
   return element;
 };
 
+var onFailure = function() {
+  picturesContainer.classList.remove('pictures-loading');
+  picturesContainer.classList.add('pictures-failure');
+  filtersContainer.classList.remove('hidden');
+};
+
 var getPictures = function(callback) {
   filtersContainer.classList.add('hidden');
   var xhr = new XMLHttpRequest();
@@ -61,18 +73,10 @@ var getPictures = function(callback) {
     filtersContainer.classList.remove('hidden');
   };
 
-  xhr.onerror = function() {
-    picturesContainer.classList.remove('pictures-loading');
-    picturesContainer.classList.add('pictures-failure');
-    filtersContainer.classList.remove('hidden');
-  };
+  xhr.onerror = onFailure;
 
   xhr.timeout = 10000;
-  xhr.ontimeout = function() {
-    picturesContainer.classList.remove('pictures-loading');
-    picturesContainer.classList.add('pictures-failure');
-    filtersContainer.classList.remove('hidden');
-  };
+  xhr.ontimeout = onFailure;
 
   picturesContainer.classList.add('pictures-loading');
 
@@ -87,23 +91,44 @@ var renderPictures = function(loadedPictures) {
   });
 };
 
+var compareCommentsNumber = function(a, b) {
+  if (b.comments < a.comments) {
+    return -1;
+  }
+  if (b.comments > a.comments) {
+    return 1;
+  }
+  return 0;
+};
+
+var compareDate = function(a, b) {
+  var firstDate = new Date(a.date);
+  var secondDate = new Date(b.date);
+
+  if (secondDate < firstDate) {
+    return -1;
+  }
+  if (secondDate > firstDate) {
+    return 1;
+  }
+  return 0;
+};
+
+var isPictureNew = function(picture) {
+  //количество дней от даты публикации до текущего момента
+  var daysAre = (Date.now() - Date.parse(picture.date)) / 24 / 60 / 60 / 1000;
+  return daysAre <= DAYS_LIMIT;
+};
+
 var getFilteredPictures = function(loadedPictures, filter) {
   var picturesToFilter = loadedPictures.slice(0);
 
   switch (filter) {
-    case 'discussed':
-      picturesToFilter.sort(function(a, b) {
-        return b.comments - a.comments;
-      });
+    case Filter.DISCUSSED:
+      picturesToFilter.sort(compareCommentsNumber);
       break;
-    case 'new':
-      picturesToFilter.sort(function(a, b) {
-        return Date.parse(b.date) - Date.parse(a.date);
-      });
-      picturesToFilter = picturesToFilter.filter(function(picture) {
-        return ((Date.now() - Date.parse(picture.date)) / 24 / 60 / 60 / 1000) <= 4 &&
-          ((Date.now() - Date.parse(picture.date)) / 24 / 60 / 60 / 1000) > 0;
-      });
+    case Filter.NEW:
+      picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
       break;
   }
 
@@ -111,8 +136,12 @@ var getFilteredPictures = function(loadedPictures, filter) {
 };
 
 var setFilterEnabled = function(filter) {
-  var filteredHotels = getFilteredPictures(pictures, filter);
-  renderPictures(filteredHotels);
+  var filteredPictures = getFilteredPictures(pictures, filter);
+  if (filteredPictures.length === 0) {
+    picturesContainer.classList.add('pictures-not-found');
+  } else {
+    renderPictures(filteredPictures);
+  }
 };
 
 
