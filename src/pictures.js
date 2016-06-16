@@ -12,9 +12,19 @@ var IMAGE_HEIGTH = 182;
 var PICTURES_LOAD_URL = '//o0.github.io/assets/json/pictures.json';
 var DAYS_LIMIT = 4;
 
-var Filter = {
-  'NEW': 'new',
-  'DISCUSSED': 'discussed'
+var filtersList = {
+  'POPULAR': {
+    value: 'popular',
+    id: 'filter-popular'
+  },
+  'NEW': {
+    value: 'new',
+    id: 'filter-new'
+  },
+  'DISCUSSED': {
+    value: 'discussed',
+    id: 'filter-discussed'
+  }
 };
 
 if ('content' in templateElement) {
@@ -124,11 +134,21 @@ var getFilteredPictures = function(loadedPictures, filter) {
   var picturesToFilter = loadedPictures.slice(0);
 
   switch (filter) {
-    case Filter.DISCUSSED:
+    case filtersList.POPULAR.value:
+      picturesToFilter = picturesToFilter.filter(function() {
+        return true;
+      });
+      break;
+    case filtersList.DISCUSSED.value:
       picturesToFilter.sort(compareCommentsNumber);
       break;
-    case Filter.NEW:
+    case filtersList.NEW.value:
       picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
+      break;
+    default:
+      picturesToFilter = picturesToFilter.filter(function() {
+        return true;
+      });
       break;
   }
 
@@ -136,6 +156,9 @@ var getFilteredPictures = function(loadedPictures, filter) {
 };
 
 var setFilterEnabled = function(filter) {
+  if (typeof filter === 'undefined') {
+    filter = 'popular';
+  }
   var filteredPictures = getFilteredPictures(pictures, filter);
   if (filteredPictures.length === 0) {
     picturesContainer.classList.add('pictures-not-found');
@@ -157,5 +180,5 @@ var setFiltrationEnabled = function() {
 getPictures(function(loadedPictures) {
   pictures = loadedPictures;
   setFiltrationEnabled();
-  setFilterEnabled('popular');
+  setFilterEnabled();
 });
