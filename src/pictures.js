@@ -5,27 +5,35 @@ var templateElement = document.querySelector('template');
 var elementToClone;
 var filtersContainer = document.querySelector('.filters');
 var pictures = [];
+var pageNumber = 0;
+var filteredPictures = [];
 
 var IMAGE_LOAD_TIMEOUT = 10000;
+var XHR_TIMEOUT = 10000;
 var IMAGE_WIDTH = 182;
 var IMAGE_HEIGTH = 182;
 var PICTURES_LOAD_URL = '//o0.github.io/assets/json/pictures.json';
 var DAYS_LIMIT = 4;
+var PAGE_SIZE = 12;
+var THROTTLE_DELAY = 100;
+var GAP = 50;
 
-var filtersList = {
-  'POPULAR': {
+var filtersList = [
+  {
+    value: 'new'
+  },
+  {
+    value: 'discussed'
+  },
+  {
     value: 'popular',
-    id: 'filter-popular'
-  },
-  'NEW': {
-    value: 'new',
-    id: 'filter-new'
-  },
-  'DISCUSSED': {
-    value: 'discussed',
-    id: 'filter-discussed'
+    default: true
   }
-};
+];
+
+var defaultFilter = filtersList.filter(function(filter) {
+  return filter.default;
+})[0];
 
 if ('content' in templateElement) {
   elementToClone = templateElement.content.querySelector('.picture');
@@ -85,7 +93,7 @@ var getPictures = function(callback) {
 
   xhr.onerror = onFailure;
 
-  xhr.timeout = 10000;
+  xhr.timeout = XHR_TIMEOUT;
   xhr.ontimeout = onFailure;
 
   picturesContainer.classList.add('pictures-loading');
@@ -94,9 +102,15 @@ var getPictures = function(callback) {
   xhr.send();
 };
 
-var renderPictures = function(loadedPictures) {
-  picturesContainer.innerHTML = '';
-  loadedPictures.forEach(function(picture) {
+var renderPictures = function(loadedPictures, page, replace) {
+  if(replace) {
+    picturesContainer.innerHTML = '';
+  }
+
+  var from = page * PAGE_SIZE;
+  var to = from + PAGE_SIZE;
+
+  loadedPictures.slice(from, to).forEach(function(picture) {
     getPictureElement(picture, picturesContainer);
   });
 };
@@ -134,15 +148,15 @@ var getFilteredPictures = function(loadedPictures, filter) {
   var picturesToFilter = loadedPictures.slice(0);
 
   switch (filter) {
-    case filtersList.POPULAR.value:
+    case filtersList[2].value:
       picturesToFilter = picturesToFilter.filter(function() {
         return true;
       });
       break;
-    case filtersList.DISCUSSED.value:
+    case filtersList[1].value:
       picturesToFilter.sort(compareCommentsNumber);
       break;
-    case filtersList.NEW.value:
+    case filtersList[0].value:
       picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
       break;
     default:
@@ -156,29 +170,60 @@ var getFilteredPictures = function(loadedPictures, filter) {
 };
 
 var setFilterEnabled = function(filter) {
-  if (typeof filter === 'undefined') {
-    filter = 'popular';
-  }
-  var filteredPictures = getFilteredPictures(pictures, filter);
+  pageNumber = 0;
+  filter = filter || defaultFilter.value;
+  filteredPictures = getFilteredPictures(pictures, filter);
   if (filteredPictures.length === 0) {
     picturesContainer.classList.add('pictures-not-found');
   } else {
-    renderPictures(filteredPictures);
+    renderPictures(filteredPictures, 0, true);
   }
 };
 
 
 var setFiltrationEnabled = function() {
-  var filters = filtersContainer.querySelectorAll('.filters-radio');
-  for (var i = 0; i < filters.length; i++) {
-    filters[i].onclick = function() {
-      setFilterEnabled(this.value);
-    };
-  }
+  filtersContainer.addEventListener('click', function(evt) {
+    if (evt.target.classList.contains('filters-radio')) {
+      setFilterEnabled(evt.target.value);
+    }
+  });
+};
+
+var getPageHeight = function() {
+  return Math.max(
+    document.body.scrollHeight, document.documentElement.scrollHeight,
+    document.body.offsetHeight, document.documentElement.offsetHeight,
+    document.body.clientHeight, document.documentElement.clientHeight
+  );
+};
+
+var isBottomReached = function() {
+  var pageHeight = getPageHeight();
+  var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  var space = pageHeight - (scrollTop + document.documentElement.clientHeight);
+  return space < GAP;
+};
+
+var isNextPageAvailable = function(picturesList, page, pageSize) {
+  return page < Math.floor(picturesList.length / pageSize);
+};
+
+var setScrollEnabled = function() {
+  var lastCall = Date.now();
+  window.addEventListener('scroll', function() {
+    if (Date.now() - lastCall >= THROTTLE_DELAY) {
+      if (isBottomReached() && isNextPageAvailable(filteredPictures, pageNumber, PAGE_SIZE)) {
+        pageNumber++;
+        renderPictures(filteredPictures, pageNumber, false);
+      }
+      lastCall = Date.now();
+    }
+  });
 };
 
 getPictures(function(loadedPictures) {
   pictures = loadedPictures;
   setFiltrationEnabled();
   setFilterEnabled();
+  setScrollEnabled();
 });
