@@ -163,30 +163,7 @@ var isPictureNew = function(picture) {
 };
 
 var getFilteredPictures = function(loadedPictures, filter) {
-  var picturesToFilter = loadedPictures.slice(0);
-
-  filterArray(filter, picturesToFilter);
-
-  // switch (filter) {
-  //   case filtersList[2].value:
-  //     picturesToFilter = picturesToFilter.filter(function() {
-  //       return true;
-  //     });
-  //     break;
-  //   case filtersList[1].value:
-  //     picturesToFilter.sort(compareCommentsNumber);
-  //     break;
-  //   case filtersList[0].value:
-  //     picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
-  //     break;
-  //   default:
-  //     picturesToFilter = picturesToFilter.filter(function() {
-  //       return true;
-  //     });
-  //     break;
-  // }
-
-  return filterArray(filter, picturesToFilter);
+  return filterArray(filter, loadedPictures.slice(0));
 };
 
 var setFilterEnabled = function(filter) {
