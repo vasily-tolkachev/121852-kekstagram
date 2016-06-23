@@ -20,20 +20,38 @@ var GAP = 50;
 
 var filtersList = [
   {
-    value: 'new'
+    value: 'new',
+    filteringMethod: function(picturesToFilter) {
+      return picturesToFilter.sort(compareDate).filter(isPictureNew);
+    }
   },
   {
-    value: 'discussed'
+    value: 'discussed',
+    filteringMethod: function(picturesToFilter) {
+      return picturesToFilter.sort(compareCommentsNumber);
+    }
   },
   {
     value: 'popular',
-    default: true
+    default: true,
+    filteringMethod: function(picturesToFilter) {
+      return picturesToFilter.filter(function() {
+        return true;
+      });
+    }
   }
 ];
 
 var defaultFilter = filtersList.filter(function(filter) {
   return filter.default;
 })[0];
+
+var filterArray = function(name, picturesToFilter) {
+  var currentFilter = filtersList.filter(function(filter) {
+    return filter.value === name;
+  })[0];
+  return currentFilter.filteringMethod(picturesToFilter);
+};
 
 if ('content' in templateElement) {
   elementToClone = templateElement.content.querySelector('.picture');
@@ -147,26 +165,28 @@ var isPictureNew = function(picture) {
 var getFilteredPictures = function(loadedPictures, filter) {
   var picturesToFilter = loadedPictures.slice(0);
 
-  switch (filter) {
-    case filtersList[2].value:
-      picturesToFilter = picturesToFilter.filter(function() {
-        return true;
-      });
-      break;
-    case filtersList[1].value:
-      picturesToFilter.sort(compareCommentsNumber);
-      break;
-    case filtersList[0].value:
-      picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
-      break;
-    default:
-      picturesToFilter = picturesToFilter.filter(function() {
-        return true;
-      });
-      break;
-  }
+  filterArray(filter, picturesToFilter);
 
-  return picturesToFilter;
+  // switch (filter) {
+  //   case filtersList[2].value:
+  //     picturesToFilter = picturesToFilter.filter(function() {
+  //       return true;
+  //     });
+  //     break;
+  //   case filtersList[1].value:
+  //     picturesToFilter.sort(compareCommentsNumber);
+  //     break;
+  //   case filtersList[0].value:
+  //     picturesToFilter = picturesToFilter.sort(compareDate).filter(isPictureNew);
+  //     break;
+  //   default:
+  //     picturesToFilter = picturesToFilter.filter(function() {
+  //       return true;
+  //     });
+  //     break;
+  // }
+
+  return filterArray(filter, picturesToFilter);
 };
 
 var setFilterEnabled = function(filter) {
@@ -175,8 +195,15 @@ var setFilterEnabled = function(filter) {
   filteredPictures = getFilteredPictures(pictures, filter);
   if (filteredPictures.length === 0) {
     picturesContainer.classList.add('pictures-not-found');
+    renderPictures(filteredPictures, pageNumber, true);
   } else {
-    renderPictures(filteredPictures, 0, true);
+    picturesContainer.classList.remove('pictures-not-found');
+    renderPictures(filteredPictures, pageNumber, true);
+
+    while (isBottomReached() && isNextPageAvailable(filteredPictures, pageNumber, PAGE_SIZE)) {
+      pageNumber++;
+      renderPictures(filteredPictures, pageNumber, false);
+    }
   }
 };
 
@@ -208,16 +235,23 @@ var isNextPageAvailable = function(picturesList, page, pageSize) {
   return page < Math.floor(picturesList.length / pageSize);
 };
 
+var drawNextPage = function(lastCall) {
+  if (Date.now() - lastCall >= THROTTLE_DELAY) {
+    if (isBottomReached() && isNextPageAvailable(filteredPictures, pageNumber, PAGE_SIZE)) {
+      pageNumber++;
+      renderPictures(filteredPictures, pageNumber, false);
+    }
+    lastCall = Date.now();
+  }
+};
+
 var setScrollEnabled = function() {
   var lastCall = Date.now();
   window.addEventListener('scroll', function() {
-    if (Date.now() - lastCall >= THROTTLE_DELAY) {
-      if (isBottomReached() && isNextPageAvailable(filteredPictures, pageNumber, PAGE_SIZE)) {
-        pageNumber++;
-        renderPictures(filteredPictures, pageNumber, false);
-      }
-      lastCall = Date.now();
-    }
+    drawNextPage(lastCall);
+  });
+  window.addEventListener('resize', function() {
+    drawNextPage(lastCall);
   });
 };
 
