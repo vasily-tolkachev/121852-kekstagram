@@ -100,17 +100,17 @@
     topInput.max = topMax >= 0 ? topMax : 0;
   }
 
-  leftInput.oninput = function() {
+  leftInput.addEventListener('input', function() {
     setSideConstraint();
-  };
+  });
 
-  topInput.oninput = function() {
+  topInput.addEventListener('input', function() {
     setSideConstraint();
-  };
+  });
 
-  sideInput.oninput = function() {
+  sideInput.addEventListener('input', function() {
     setIndentsConstraint();
-  };
+  });
 
   /**
    * Проверяет, валидны ли данные, в форме кадрирования.
@@ -204,7 +204,7 @@
    * и показывается форма кадрирования.
    * @param {Event} evt
    */
-  uploadForm.onchange = function(evt) {
+  uploadForm.addEventListener('change', function(evt) {
     var element = evt.target;
     if (element.id === 'upload-file') {
       // Проверка типа загружаемого файла, тип должен быть изображением
@@ -237,7 +237,7 @@
         showMessage(Action.ERROR);
       }
     }
-  };
+  });
 
   /**
    * Обработка сброса формы кадрирования. Возвращает в начальное состояние
@@ -259,7 +259,7 @@
    * кропнутое изображение в форму добавления фильтра и показывает ее.
    * @param {Event} evt
    */
-  resizeForm.onsubmit = function(evt) {
+  resizeForm.addEventListener('submit', function(evt) {
     evt.preventDefault();
 
     if (resizeFormIsValid()) {
@@ -280,9 +280,9 @@
       resizeForm.classList.add('invisible');
       filterForm.classList.remove('invisible');
     }
-  };
+  });
 
-  resizeForm.oninput = function() {
+  resizeForm.addEventListener('input', function() {
     if (!resizeFormIsValid()) {
       submitBtn.setAttribute('disabled', 'disabled');
     } else {
@@ -293,25 +293,25 @@
 
       submitBtn.removeAttribute('disabled', 'disabled');
     }
-  };
+  });
 
   /**
    * Сброс формы фильтра. Показывает форму кадрирования.
    * @param {Event} evt
    */
-  filterForm.onreset = function(evt) {
+  filterForm.addEventListener('reset', function(evt) {
     evt.preventDefault();
 
     filterForm.classList.add('invisible');
     resizeForm.classList.remove('invisible');
-  };
+  });
 
   /**
    * Отправка формы фильтра. Возвращает в начальное состояние, предварительно
    * записав сохраненный фильтр в cookie.
    * @param {Event} evt
    */
-  filterForm.onsubmit = function(evt) {
+  filterForm.addEventListener('submit', function(evt) {
     evt.preventDefault();
 
     var date = new Date(Date.now() + getNumDaysAfterBirthday());
@@ -328,13 +328,13 @@
 
     filterForm.classList.add('invisible');
     uploadForm.classList.remove('invisible');
-  };
+  });
 
   /**
    * Обработчик изменения фильтра. Добавляет класс из filterMap соответствующий
    * выбранному значению в форме.
    */
-  filterForm.onchange = function() {
+  filterForm.addEventListener('change', function() {
     if (!filterMap) {
       // Ленивая инициализация. Объект не создается до тех пор, пока
       // не понадобится прочитать его в первый раз, а после этого запоминается
@@ -354,7 +354,28 @@
     // убрать предыдущий примененный класс. Для этого нужно или запоминать его
     // состояние или просто перезаписывать.
     filterImage.className = 'filter-image-preview ' + filterMap[selectedFilter];
-  };
+  });
+
+  window.addEventListener('resizerchange', function() {
+    var x = currentResizer.getConstraint().x;
+    var y = currentResizer.getConstraint().y;
+    var side = currentResizer.getConstraint().side;
+
+    if (currentResizer.constraintIsValid(x, y, side)) {
+      var imageWidth = currentResizer._image.naturalWidth;
+      var imageHeight = currentResizer._image.naturalHeight;
+      leftInput.value = parseInt(x, 10);
+      topInput.value = parseInt(y, 10);
+      sideInput.value = parseInt(side, 10);
+
+      var sideMax = Math.min(imageWidth - leftInput.value, imageHeight - topInput.value);
+      sideInput.max = sideMax >= 0 ? sideMax : 0;
+      var leftMax = imageWidth - sideInput.value;
+      leftInput.max = leftMax >= 0 ? leftMax : 0;
+      var topMax = imageHeight - sideInput.value;
+      topInput.max = topMax >= 0 ? topMax : 0;
+    }
+  });
 
   cleanupResizer();
   updateBackground();
