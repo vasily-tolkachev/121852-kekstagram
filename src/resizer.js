@@ -1,19 +1,6 @@
 'use strict';
 
 (function() {
-  var leftInput = document.querySelector('#resize-x');
-  var topInput = document.querySelector('#resize-y');
-  var sideInput = document.querySelector('#resize-size');
-
-  function setFieldConstraint(imageWidth, imageHeight) {
-    var sideMax = Math.min(imageWidth - leftInput.value, imageHeight - topInput.value);
-    sideInput.max = sideMax >= 0 ? sideMax : 0;
-    var leftMax = imageWidth - sideInput.value;
-    leftInput.max = leftMax >= 0 ? leftMax : 0;
-    var topMax = imageHeight - sideInput.value;
-    topInput.max = topMax >= 0 ? topMax : 0;
-  }
-
   /**
    * @constructor
    * @param {string} image
@@ -46,11 +33,6 @@
       var side = Math.min(
           this._container.width * INITIAL_SIDE_RATIO,
           this._container.height * INITIAL_SIDE_RATIO);
-
-      leftInput.value = parseInt(this._container.width / 2 - side / 2, 10);
-      topInput.value = parseInt(this._container.height / 2 - side / 2, 10);
-      sideInput.value = parseInt(side, 10);
-      setFieldConstraint(this._image.naturalWidth, this._image.naturalHeight);
 
       // Изначально предлагаемое кадрирование — часть по центру с размером в 3/4
       // от размера меньшей стороны.
@@ -319,10 +301,6 @@
         this._resizeConstraint.x = x;
         this._resizeConstraint.y = y;
         this._resizeConstraint.side = side;
-        leftInput.value = parseInt(x, 10);
-        topInput.value = parseInt(y, 10);
-        sideInput.value = parseInt(side, 10);
-        setFieldConstraint(this._image.naturalWidth, this._image.naturalHeight);
       }
 
       requestAnimationFrame(function() {
