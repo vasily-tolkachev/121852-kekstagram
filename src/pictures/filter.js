@@ -60,11 +60,12 @@ var defaultFilter = filtersList.filter(function(filter) {
 })[0];
 
 var getFilteredPictures = function(picturesToFilter, filterName) {
+  var pictures = picturesToFilter.slice(0);
   filterName = filterName || defaultFilter.value;
   var currentFilter = filtersList.filter(function(filter) {
     return filter.value === filterName;
   })[0];
-  return currentFilter.filteringMethod(picturesToFilter);
+  return currentFilter.filteringMethod(pictures);
 };
 
 module.exports = getFilteredPictures;

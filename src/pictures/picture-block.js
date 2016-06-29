@@ -6,6 +6,7 @@ var IMAGE_LOAD_TIMEOUT = 10000;
 
 var templateElement = document.querySelector('template');
 var elementToClone;
+var gallery = require('../gallery');
 
 if ('content' in templateElement) {
   elementToClone = templateElement.content.querySelector('.picture');
@@ -42,6 +43,11 @@ var getPictureElement = function(data, container) {
     image.src = '';
     element.classList.add('picture-load-failure');
   }, IMAGE_LOAD_TIMEOUT);
+
+  element.addEventListener('click', function(evt) {
+    evt.preventDefault();
+    gallery.showGallery(data);
+  });
 
   return element;
 };
