@@ -14,6 +14,7 @@ var renderPicturesPage = require('./render-pictures-page');
 var getFilteredPictures = require('./filter');
 var utilities = require('../utilities');
 var getPictures = require('./load');
+var gallery = require('../gallery');
 
 var scrollThrottler = function() {
   if (!scrollTimeout) {
@@ -33,8 +34,8 @@ var drawNextPage = function() {
 
 var setFilterEnabled = function(filter) {
   pageNumber = 0;
-
   filteredPictures = getFilteredPictures(pictures, filter);
+  gallery.savePictures(filteredPictures);
   if (filteredPictures.length === 0) {
     picturesContainer.classList.add('pictures-not-found');
     renderPicturesPage(filteredPictures, pageNumber, true);
