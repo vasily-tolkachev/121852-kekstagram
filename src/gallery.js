@@ -45,7 +45,7 @@ var hideGallery = function() {
 };
 
 var _onPhotoClick = function() {
-  if (activePictureNumber <= galleryPictures.length) {
+  if (activePictureNumber < galleryPictures.length - 1) {
     activePictureNumber++;
     setActivePicture(activePictureNumber);
   }
