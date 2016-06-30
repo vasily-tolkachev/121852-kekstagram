@@ -36,6 +36,7 @@ var setFilterEnabled = function(filter) {
   pageNumber = 0;
   filteredPictures = getFilteredPictures(pictures, filter);
   gallery.savePictures(filteredPictures);
+
   if (filteredPictures.length === 0) {
     picturesContainer.classList.add('pictures-not-found');
     renderPicturesPage(filteredPictures, pageNumber, true);

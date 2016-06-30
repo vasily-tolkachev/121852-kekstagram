@@ -3,17 +3,21 @@
 var PAGE_SIZE = 12;
 
 var picturesContainer = document.querySelector('.pictures');
-var getPictureElement = require('./picture-block');
+var Photo = require('./photo');
+var renderedPictures = [];
 
 module.exports = function(loadedPictures, page, replace) {
   if(replace) {
-    picturesContainer.innerHTML = '';
+    renderedPictures.forEach(function(photo) {
+      photo.remove();
+    });
+    renderedPictures = [];
   }
 
   var from = page * PAGE_SIZE;
   var to = from + PAGE_SIZE;
 
   loadedPictures.slice(from, to).forEach(function(picture) {
-    getPictureElement(picture, picturesContainer);
+    renderedPictures.push(new Photo(picture, picturesContainer));
   });
 };
