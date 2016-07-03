@@ -62,6 +62,6 @@ var setFiltrationEnabled = function() {
 getPictures(function(loadedPictures) {
   pictures = loadedPictures;
   setFiltrationEnabled();
-  setFilterEnabled();
+  setFilterEnabled(localStorage.getItem('filter'));
   window.addEventListener('scroll', scrollThrottler);
 });
