@@ -1,5 +1,7 @@
 'use strict';
 
+var filtersContainer = document.querySelector('.filters');
+var filterInputs = filtersContainer['filter'];
 var DAYS_LIMIT = 4;
 
 var compareCommentsNumber = function(a, b) {
@@ -62,9 +64,17 @@ var defaultFilter = filtersList.filter(function(filter) {
 var getFilteredPictures = function(picturesToFilter, filterName) {
   var pictures = picturesToFilter.slice(0);
   filterName = filterName || defaultFilter.value;
+  localStorage.setItem('filter', filterName);
   var currentFilter = filtersList.filter(function(filter) {
     return filter.value === filterName;
   })[0];
+
+  [].filter.call(filterInputs, function(item) {
+    if (item.value === filterName) {
+      item.setAttribute('checked', 'checked');
+    }
+  });
+
   return currentFilter.filteringMethod(pictures);
 };
 
