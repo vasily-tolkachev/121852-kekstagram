@@ -1,13 +1,12 @@
 'use strict';
 
 var getPictureElement = require('./picture-block');
-var gallery = require('../gallery');
 var utilities = require('../utilities');
 
 var onElementAction = function(evt, data) {
   if (evt.target.tagName === 'IMG') {
     evt.preventDefault();
-    gallery.showGallery(data);
+    location.hash = '#photo/' + data.url;
   }
 };
 
