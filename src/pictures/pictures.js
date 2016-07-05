@@ -63,7 +63,7 @@ getPictures(function(loadedPictures) {
   pictures = loadedPictures;
   setFiltrationEnabled();
   setFilterEnabled(localStorage.getItem('filter'));
-  if (location.hash !== '') {
+  if (utilities.getHash() !== '') {
     gallery._onHashChange();
   }
   window.addEventListener('scroll', scrollThrottler);
