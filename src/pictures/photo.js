@@ -11,29 +11,28 @@ var onElementAction = function(evt, data) {
 };
 
 var Photo = function(data, container) {
-  var self = this;
-  self.data = data;
-  self.element = getPictureElement(this.data, container);
+  this.data = data;
+  this.element = getPictureElement(this.data, container);
 
-  self.onPictureClick = function(evt) {
-    onElementAction(evt, data);
-  };
+  this.element.addEventListener('click', this.onPictureClick.bind(this));
+  this.element.addEventListener('keydown', this.onPictureKeydown.bind(this));
+  container.appendChild(this.element);
+};
 
-  this.onPictureKeydown = function(evt) {
-    if (utilities.isActivationEvent(evt)) {
-      onElementAction(evt, data);
-    }
-  };
+Photo.prototype.remove = function() {
+  this.element.removeEventListener('click', this.onPictureClick.bind(this));
+  this.element.removeEventListener('keydown', this.onPictureClick.bind(this));
+  this.element.parentNode.removeChild(this.element);
+};
 
-  self.remove = function() {
-    self.element.removeEventListener('click', self.onPictureClick);
-    self.element.removeEventListener('keydown', self.onPictureKeydown);
-    self.element.parentNode.removeChild(self.element);
-  };
+Photo.prototype.onPictureKeydown = function(evt) {
+  if (utilities.isActivationEvent(evt)) {
+    onElementAction(evt, this.data);
+  }
+};
 
-  self.element.addEventListener('click', self.onPictureClick);
-  self.element.addEventListener('keydown', self.onPictureKeydown);
-  container.appendChild(self.element);
+Photo.prototype.onPictureClick = function(evt) {
+  onElementAction(evt, this.data);
 };
 
 module.exports = Photo;
