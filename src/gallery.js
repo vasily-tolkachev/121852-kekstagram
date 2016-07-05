@@ -1,6 +1,7 @@
 'use strict';
 
 var utilities = require('./utilities');
+var HASH_PATH = '#photo/';
 
 var Gallery = function() {
   this.element = document.querySelector('.gallery-overlay');
@@ -14,7 +15,7 @@ var Gallery = function() {
 
   this.savePictures = this.savePictures.bind(this);
   this._showGallery = this._showGallery.bind(this);
-  this._setActivePicture = this._setActivePicture.bind(this);
+  this._fillGallery = this._fillGallery.bind(this);
   this._getElementByUrl = this._getElementByUrl.bind(this);
   this._hideGallery = this._hideGallery.bind(this);
   this._onPhotoClick = this._onPhotoClick.bind(this);
@@ -31,7 +32,7 @@ Gallery.prototype.savePictures = function(pictures) {
 Gallery.prototype._showGallery = function(pictureUrl) {
   var picture = this._getElementByUrl(pictureUrl);
   this.activePictureNumber = this.galleryPictures.indexOf(picture);
-  this._setActivePicture(picture);
+  this._fillGallery(picture);
   this.element.classList.remove('invisible');
 
   document.addEventListener('keydown', this._onDocumentKeyDown);
@@ -39,10 +40,10 @@ Gallery.prototype._showGallery = function(pictureUrl) {
   this.closeElement.addEventListener('click', this._hideGallery);
 };
 
-Gallery.prototype._setActivePicture = function(actPicture) {
-  this.preview.src = actPicture.url;
-  this.likes.textContent = actPicture.likes;
-  this.comments.textContent = actPicture.comments;
+Gallery.prototype._fillGallery = function(activePicture) {
+  this.preview.src = activePicture.url;
+  this.likes.textContent = activePicture.likes;
+  this.comments.textContent = activePicture.comments;
 };
 
 Gallery.prototype._getElementByUrl = function(pictureUrl) {
@@ -54,7 +55,7 @@ Gallery.prototype._getElementByUrl = function(pictureUrl) {
 
 Gallery.prototype._hideGallery = function() {
   this.element.classList.add('invisible');
-  location.hash = '';
+  utilities.changeHash('');
 
   this.preview.removeEventListener('click', this._onPhotoClick);
   document.removeEventListener('keydown', this._onDocumentKeyDown);
@@ -65,7 +66,7 @@ Gallery.prototype._onPhotoClick = function() {
   if (this.activePictureNumber < this.galleryPictures.length - 1) {
     this.activePictureNumber++;
     var currentSrc = this.galleryPictures[this.activePictureNumber].url;
-    location.hash = '#photo/' + currentSrc;
+    utilities.changeHash(HASH_PATH + currentSrc);
   }
 };
 
@@ -77,8 +78,7 @@ Gallery.prototype._onDocumentKeyDown = function(evt) {
 };
 
 Gallery.prototype._onHashChange = function() {
-  var hash = window.location.hash;
-  var getPhotoRegExp = /#photo\/(\S+)/.exec(hash);
+  var getPhotoRegExp = /#photo\/(\S+)/.exec(utilities.getHash());
   if (getPhotoRegExp) {
     if (this.galleryPictures.some(function(item) {
       return item.url === getPhotoRegExp[1];

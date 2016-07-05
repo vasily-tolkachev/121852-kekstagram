@@ -30,5 +30,11 @@ module.exports = {
   },
   isNextPageAvailable: function(picturesList, page, pageSize) {
     return page < Math.floor(picturesList.length / pageSize);
+  },
+  changeHash: function(newHashString) {
+    window.location.hash = newHashString;
+  },
+  getHash: function() {
+    return window.location.hash;
   }
 };
