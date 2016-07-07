@@ -2,6 +2,7 @@
 
 var getPictureElement = require('./picture-block');
 var utilities = require('../utilities');
+var BaseComponent = require('./base-component');
 
 var onElementAction = function(evt, data) {
   if (evt.target.tagName === 'IMG') {
@@ -11,18 +12,16 @@ var onElementAction = function(evt, data) {
 };
 
 var Photo = function(data, container) {
-  this.data = data;
-  this.element = getPictureElement(this.data, container);
-
+  BaseComponent.call(this, data);
   this.element.addEventListener('click', this.onPictureClick.bind(this));
   this.element.addEventListener('keydown', this.onPictureKeydown.bind(this));
-  container.appendChild(this.element);
+  this._addToParentContainer(container);
 };
 
-Photo.prototype.remove = function() {
-  this.element.removeEventListener('click', this.onPictureClick.bind(this));
-  this.element.removeEventListener('keydown', this.onPictureClick.bind(this));
-  this.element.parentNode.removeChild(this.element);
+utilities.inherit(BaseComponent, Photo);
+
+Photo.prototype._createDomElement = function() {
+  return getPictureElement(this.data);
 };
 
 Photo.prototype.onPictureKeydown = function(evt) {
@@ -33,6 +32,12 @@ Photo.prototype.onPictureKeydown = function(evt) {
 
 Photo.prototype.onPictureClick = function(evt) {
   onElementAction(evt, this.data);
+};
+
+Photo.prototype.remove = function() {
+  this.element.removeEventListener('click', this.onPictureClick.bind(this));
+  this.element.removeEventListener('keydown', this.onPictureClick.bind(this));
+  this.element.parentNode.removeChild(this.element);
 };
 
 module.exports = Photo;

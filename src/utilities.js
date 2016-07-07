@@ -36,5 +36,10 @@ module.exports = {
   },
   getHash: function() {
     return window.location.hash;
+  },
+  inherit: function(Parent, Child) {
+    var EmptyCtor = function() {};
+    EmptyCtor.prototype = Parent.prototype;
+    Child.prototype = new EmptyCtor();
   }
 };
