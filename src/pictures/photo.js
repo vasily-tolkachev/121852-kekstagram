@@ -2,7 +2,7 @@
 
 var getPictureElement = require('./picture-block');
 var utilities = require('../utilities');
-var BaseComponent = require('./base-component');
+var BaseComponent = require('../base-component');
 
 var onElementAction = function(evt, data) {
   if (evt.target.tagName === 'IMG') {

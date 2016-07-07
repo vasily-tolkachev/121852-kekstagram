@@ -1,10 +1,12 @@
 'use strict';
 
 var utilities = require('./utilities');
+var BaseComponent = require('./base-component');
 var HASH_PATH = '#photo/';
 
+
 var Gallery = function() {
-  this.element = document.querySelector('.gallery-overlay');
+  BaseComponent.call(this);
   this.preview = this.element.querySelector('.gallery-overlay-image');
   this.likes = this.element.querySelector('.likes-count');
   this.comments = this.element.querySelector('.comments-count');
@@ -23,6 +25,12 @@ var Gallery = function() {
   this._onHashChange = this._onHashChange.bind(this);
 
   window.addEventListener('hashchange', this._onHashChange);
+};
+
+utilities.inherit(BaseComponent, Gallery);
+
+Gallery.prototype._createDomElement = function() {
+  return document.querySelector('.gallery-overlay');
 };
 
 Gallery.prototype.savePictures = function(pictures) {
